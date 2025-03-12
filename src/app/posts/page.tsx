@@ -18,7 +18,6 @@ export default function posts() {
     console.log(token);
 
     fetch("/api/posts", {
-      cache: "no-cache",
       headers: {
         Authorization: `Bearer ${token}`,
       },

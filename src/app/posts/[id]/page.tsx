@@ -6,18 +6,41 @@ export default function PostDetail() {
   const { id } = useParams();
   const router = useRouter();
   const [post, setPost] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch(`/api/posts/${id}`)
-      .then((res) => res.json())
-      .then((data) => setPost(data.post))
-      .catch((error) => console.error("Error fetching post:", error));
+    if (!id) return; // Pastikan ID tersedia sebelum fetch
+
+    console.log("Fetching post with ID:", id); // Debugging
+
+    fetch(`/api/posts/${id}`, {
+      headers:{
+        Authorization: `Bearer ${localStorage.getItem("token")}`
+      }
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`Failed to fetch post: ${res.status}`);
+        }
+        return res.json();
+      })
+      .then((data) => {
+        console.log("Fetched post data:", data); // Debugging
+        setPost(data.post);
+      })
+      .catch((error) => {
+        console.error("Error fetching post:", error);
+        setError(error.message);
+      })
+      .finally(() => setLoading(false));
   }, [id]);
 
   const handleDelete = async () => {
     if (confirm("Are you sure you want to delete this post?")) {
       try {
         const token = localStorage.getItem("token");
+        console.log("Token:", token); // Debugging
         await fetch(`/api/posts/${id}`, {
           method: "DELETE",
           headers: {
@@ -32,13 +55,24 @@ export default function PostDetail() {
     }
   };
 
-  if (!post) return <p>Loading...</p>;
+  if (loading) return <p className="text-white text-center">Loading...</p>;
+  if (error) return <p className="text-red-500 text-center">Error: {error}</p>;
+  if (!post) return <p className="text-gray-400 text-center">Post not found.</p>;
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold mb-4">{post.title}</h1>
         <p className="text-gray-300 mb-6">By {post.user.name}</p>
+        <div className="relative mb-3 overflow-hidden rounded-lg ">
+                {post.image && (
+                  <img
+                    src={post.image}
+                    alt={post.title}
+                    className="w-25 h-25 object-cover rounded-lg mb-2"
+                  />
+                )}
+              </div>
         <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
           <p className="text-gray-300">{post.content}</p>
         </div>
@@ -47,16 +81,16 @@ export default function PostDetail() {
         <div className="mt-6 flex space-x-4">
           <button
             onClick={() => router.push(`/posts/${id}/edit`)}
-            className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
           >
             Edit Post
           </button>
-          <button
+          {/* <button
             onClick={handleDelete}
-            className="bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+            className="bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700"
           >
             Delete Post
-          </button>
+          </button> */}
         </div>
       </div>
     </div>

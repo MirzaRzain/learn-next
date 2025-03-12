@@ -87,7 +87,7 @@ export default function HomePage() {
           {watches.map((watch) => (
             <Link
               key={watch.id}
-              href={`/collections/${watch.slug}`}
+              href={`/posts/${watch.id}`}
               className="group transition-transform hover:scale-105 max-w-xs mx-auto"
             >
               <div className="relative mb-3 overflow-hidden rounded-lg aspect-[3/4]">

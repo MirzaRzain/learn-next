@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { getUserIdFromToken } from "@/lib/auth";
 import ImageKit from "imagekit"
@@ -11,21 +11,25 @@ const imagekit = new ImageKit({
   urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT!,
 });
 
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, context: { params: { id: string } }) {
+  const { params } = context; // Pastikan params diambil dari context
+  console.log("Received params:", params); // Debugging
+
+  const postId = parseInt(params.id);
+  if (isNaN(postId)) {
+    return NextResponse.json({ error: "Invalid Post ID" }, { status: 400 });
+  }
+
   const userId = getUserIdFromToken(request);
+  console.log("Authenticated user ID:", userId); // Debugging
+
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const postId = parseInt(params.id);
-
-  // Mengambil post berdasarkan ID
   const post = await prisma.post.findUnique({
     where: { id: postId },
-    include: { user: true }, // jika perlu menginclude informasi user terkait
+    include: { user: true },
   });
 
   if (!post) {
@@ -34,6 +38,7 @@ export async function GET(
 
   return NextResponse.json({ post }, { status: 200 });
 }
+
 
 export async function PUT(
   request: Request,
